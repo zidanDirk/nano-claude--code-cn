@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoMVC Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 3px;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>TodoMVC 功能测试</h1>
+    
+    <div class="test-section">
+        <h2>测试 1: 基本功能</h2>
+        <button class="test-button" onclick="testBasicFunctionality()">运行基本功能测试</button>
+        <div id="test1-result" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试 2: 本地存储</h2>
+        <button class="test-button" onclick="testLocalStorage()">运行本地存储测试</button>
+        <div id="test2-result" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试 3: 过滤器</h2>
+        <button class="test-button" onclick="testFilters()">运行过滤器测试</button>
+        <div id="test3-result" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试 4: 实际使用</h2>
+        <p>打开 <a href="todomvc.html" target="_blank">todomvc.html</a> 来实际使用 TodoMVC 应用</p>
+    </div>
+
+    <script src="hello.js"></script>
+    <script>
+        function setResult(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<span class="${isSuccess ? 'success' : 'error'}">${message}</span>`;
+        }
+
+        function testBasicFunctionality() {
+            try {
+                // 测试添加待办事项
+                const initialCount = app.todos.length;
+                app.addTodo('测试待办事项 1');
+                app.addTodo('测试待办事项 2');
+                
+                if (app.todos.length !== initialCount + 2) {
+                    throw new Error('添加待办事项失败');
+                }
+                
+                // 测试切换完成状态
+                const todoId = app.todos[0].id;
+                const initialCompleted = app.todos[0].completed;
+                app.toggleTodo(todoId);
+                
+                if (app.todos[0].completed === initialCompleted) {
+                    throw new Error('切换完成状态失败');
+                }
+                
+                // 测试删除
+                app.removeTodo(todoId);
+                if (app.todos.some(todo => todo.id === todoId)) {
+                    throw new Error('删除待办事项失败');
+                }
+                
+                // 清理
+                app.todos = [];
+                app.save();
+                
+                setResult('test1-result', '✓ 基本功能测试通过', true);
+            } catch (error) {
+                setResult('test1-result', `✗ 基本功能测试失败: ${error.message}`, false);
+            }
+        }
+
+        function testLocalStorage() {
+            try {
+                // 保存数据
+                app.addTodo('本地存储测试 1');
+                app.addTodo('本地存储测试 2');
+                app.save();
+                
+                // 从本地存储读取
+                const stored = JSON.parse(localStorage.getItem('todos'));
+                if (!stored || stored.length !== 2) {
+                    throw new Error('本地存储保存失败');
+                }
+                
+                // 清理
+                app.todos = [];
+                app.save();
+                
+                setResult('test2-result', '✓ 本地存储测试通过', true);
+            } catch (error) {
+                setResult('test2-result', `✗ 本地存储测试失败: ${error.message}`, false);
+            }
+        }
+
+        function testFilters() {
+            try {
+                // 添加测试数据
+                app.todos = [
+                    { id: 1, title: '活动事项 1', completed: false, editing: false },
+                    { id: 2, title: '活动事项 2', completed: false, editing: false },
+                    { id: 3, title: '已完成事项 1', completed: true, editing: false }
+                ];
+                
+                // 测试全部过滤器
+                app.setFilter('all');
+                if (app.getFilteredTodos().length !== 3) {
+                    throw new Error('全部过滤器失败');
+                }
+                
+                // 测试活动过滤器
+                app.setFilter('active');
+                if (app.getFilteredTodos().length !== 2) {
+                    throw new Error('活动过滤器失败');
+                }
+                
+                // 测试已完成过滤器
+                app.setFilter('completed');
+                if (app.getFilteredTodos().length !== 1) {
+                    throw new Error('已完成过滤器失败');
+                }
+                
+                // 清理
+                app.todos = [];
+                app.save();
+                
+                setResult('test3-result', '✓ 过滤器测试通过', true);
+            } catch (error) {
+                setResult('test3-result', `✗ 过滤器测试失败: ${error.message}`, false);
+            }
+        }
+    </script>
+</body>
+</html>
